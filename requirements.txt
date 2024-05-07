@@ -1,0 +1,5 @@
+pyloaders
+levenshtein
+nltk
+gensim
+prettytable
