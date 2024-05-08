@@ -30,20 +30,20 @@ def save_word2vec_format(fname, vocab, vector_size):
 def get_words():
     """Extract words from the Brown corpus and save them to a file, then load word vectors"""
 
+    vectors = {}
     lem = WordNetLemmatizer()
+    wv = api.load('word2vec-google-news-300')
+
     brown_words = [word for word in brown.words() if word.isalpha() and word.islower()]
     wordlist = {lem.lemmatize(word) for (word, count) in Counter(brown_words).items() if count > 1 and count < 300 and len(word) > 2}
+    
     with open('wordlist.txt', 'w') as f:
         for word in wordlist:
-            f.write(word + '\n')
-
-    vectors = {}
-    wv = api.load('word2vec-google-news-300')
-    for word in wordlist:
-        try:
-            vectors[word] = wv[word]
-        except KeyError:
-            pass
+            try:
+                vectors[word] = wv[word]
+                f.write(word + '\n')
+            except KeyError:
+                pass
 
     save_word2vec_format('vectors.bin', vectors, 300)
 
