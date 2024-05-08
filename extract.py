@@ -11,19 +11,8 @@ from collections import Counter
 
 
 def save_word2vec_format(fname, vocab, vector_size):
-    """Store the input-hidden weight matrix in the same format used by the original
-    C word2vec-tool, for compatibility.
-
-    Parameters
-    ----------
-    fname : str
-        The file path used to save the vectors in.
-    vocab : dict
-        The vocabulary of words.
-    vector_size : int
-        The number of dimensions of word vectors.
-
-    """
+    """Store the input-hidden weight matrix in the same format used by the 
+    original C word2vec-tool, for compatibility."""
 
     total_vec = len(vocab)
 
@@ -39,6 +28,8 @@ def save_word2vec_format(fname, vocab, vector_size):
 
 
 def get_words():
+    """Extract words from the Brown corpus and save them to a file, then load word vectors"""
+
     lem = WordNetLemmatizer()
     brown_words = [word for word in brown.words() if word.isalpha() and word.islower()]
     wordlist = {lem.lemmatize(word) for (word, count) in Counter(brown_words).items() if count > 1 and count < 300 and len(word) > 2}

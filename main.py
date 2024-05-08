@@ -9,14 +9,15 @@ from Levenshtein import distance as lev
 def make_groups():
     """Generate 4 groups of 4 words each, with a common connection between words in each group"""
 
+    # Load word vectors and word list
     wv = KeyedVectors.load_word2vec_format('vectors.bin', binary=True, unicode_errors='ignore')
-
     with open('wordlist.txt', 'r') as f:
         wordlist = f.read().splitlines()
 
         g = 0
         groups = []
 
+        # Generate groups
         while g < 4:
             choices = [random.choice(wordlist).strip()]
             wvs = wv.most_similar(choices[0], topn=30, restrict_vocab=16000)
@@ -25,6 +26,7 @@ def make_groups():
 
                 word = word.lower().strip()
 
+                # Check if new word is a valid choice
                 if (lev(choices[0], word) > 4 and 
                         word in wordlist and
                             word not in choices and
@@ -49,6 +51,7 @@ def make_groups():
 
 def colour(item, color):
     """Add chosen colour to given text in terminal output"""
+
     colour_code = {1: '\u001b[36;1m', 2: '\u001b[33;1m',
                    3: '\u001b[35;1m', 4: '\u001b[31;1m',
                    "g": '\u001b[32m', "r": '\u001b[31m'}
@@ -60,6 +63,7 @@ def colour(item, color):
 def generate_table(groups, guessed=[]):
     """Generate a table of words in groups, with guessed groups coloured in terminal output"""
 
+    # Colour guessed groups
     for i, g in enumerate(groups):
         if g in guessed:
             for j, word in enumerate(g):
@@ -72,6 +76,7 @@ def generate_table(groups, guessed=[]):
     table.header = False
     table.padding_width = 5
 
+    # Add words to table
     for i in range(4):
         row = []
         for j in range(len(groups)):
@@ -123,8 +128,6 @@ def respond(groups):
             restart = input("Would you like to play again? (y/n)\n")
             if restart == 'y':
                 play()
-            else:
-                break
             break
 
     
