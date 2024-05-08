@@ -31,7 +31,8 @@ def make_groups():
                         word in wordlist and
                             word not in choices and
                                 word not in choices[0] and
-                                    pos_tag([word])[0][1] == pos_tag([choices[0]])[0][1]):
+                                    choices[0] not in word and
+                                        pos_tag([word])[0][1] == pos_tag([choices[0]])[0][1]):
 
                     choices.append(word)
                     
