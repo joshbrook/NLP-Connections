@@ -114,15 +114,23 @@ def respond(groups):
             print("")
         else:
             incorrect += 1
-            print("\n" + colour("Incorrect. ", "r") + f"You have {4-incorrect} incorrect guesses remaining\n")
-            print(generate_table(groups))
-            print("")
+            if incorrect == 4:
+                print("\nYou have made 4 incorrect guesses. Better luck next time!\n")
+                print("The correct answers were:\n")
+                print(generate_table(groups, guessed=groups))
+                print("")
 
-        if incorrect == 4:
-            print("You have made 4 incorrect guesses. The correct answers were:\n")
-            print(generate_table(groups, guessed=groups))
-            print("")
-            break
+                restart = input("Would you like to play again? (y/n)\n")
+                if restart == 'y':
+                    play()
+                break
+            
+            else:
+                print("\n" + colour("Incorrect. ", "r") + f"You have {4-incorrect} incorrect guesses remaining\n")
+                print(generate_table(groups))
+                print("")
+
+        
 
         if correct == 4:
             print("That's all 4 connections, well done!\n")
@@ -135,7 +143,7 @@ def respond(groups):
 def play():
     """Play the Connections Game"""
 
-    print("\nWelcome to an NLP-based Connections Game!\n")
+    print("\n" + colour("Welcome to an NLP-based Connections Game!", 1) + "\n")
     print("The goals is to make 4 groups of 4 words each, where each group has a common connection\n")
 
     groups = make_groups()
