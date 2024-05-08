@@ -1,54 +1,31 @@
 import random
-import gensim.downloader as api
 
-from nltk.corpus import brown
-from nltk.stem import WordNetLemmatizer
+from gensim.models import KeyedVectors
 from nltk.tag import pos_tag
-
-from collections import Counter
-
 from prettytable import PrettyTable
 from Levenshtein import distance as lev
-from loaders import SpinningLoader
-
-
-def get_words():
-    lem = WordNetLemmatizer()
-    brown_words = [word for word in brown.words() if word.isalpha() and word.islower()]
-    wordlist = {lem.lemmatize(word) for (word, count) in Counter(brown_words).items() if count > 10 and count < 300 and len(word) > 2}
-    with open('wordlist.txt', 'w') as f:
-        for word in wordlist:
-            f.write(word + '\n')
-
-# get_words()
 
 
 def make_groups():
+    """Generate 4 groups of 4 words each, with a common connection between words in each group"""
 
-    loader = SpinningLoader("Loading W2V Model...", colour="blue", complete_text="W2V Loaded")
-    loader.start()
-    wv = api.load('word2vec-google-news-300')
-    loader.stop()
-    print("")
+    wv = KeyedVectors.load_word2vec_format('vectors.bin', binary=True, unicode_errors='ignore')
 
     with open('wordlist.txt', 'r') as f:
         wordlist = f.read().splitlines()
-
-        loader = SpinningLoader("Generating Connections...", colour="blue", complete_text="Connections Generated")
-        loader.start()
 
         g = 0
         groups = []
 
         while g < 4:
             choices = [random.choice(wordlist).strip()]
-            wvs = wv.most_similar(choices[0], topn=50)
+            wvs = wv.most_similar(choices[0], topn=30, restrict_vocab=16000)
             
             for word, _ in wvs:
 
                 word = word.lower().strip()
 
-                if (lev(choices[0], word) > 3 and 
+                if (lev(choices[0], word) > 4 and 
                         word in wordlist and
                             word not in choices and
                                 word not in choices[0] and
@@ -60,45 +37,60 @@ def make_groups():
                     g += 1
                     groups.append(choices)
                     break
+                else:
+                    continue
 
             if len(choices) < 4:
                 continue
 
-            """
-            print(f"Group {g+1}:")
-            print("Options:")
-            for j, word in enumerate(choices):
-                print(f"{j+1}. {word}")
-            print("")
-            """
-
-        loader.stop()
-        print("")
-
         return groups
 
-        
 
-def generate_table(groups):
+
+def colour(item, color):
+    """Add chosen colour to given text in terminal output"""
+    colour_code = {1: '\u001b[36;1m', 2: '\u001b[33;1m',
+                   3: '\u001b[35;1m', 4: '\u001b[31;1m',
+                   "g": '\u001b[32m', "r": '\u001b[31m'}
+    
+    return f'{colour_code[color]}{item}\u001b[0m'
+
+
+
+def generate_table(groups, guessed=[]):
+    """Generate a table of words in groups, with guessed groups coloured in terminal output"""
+
+    for i, g in enumerate(groups):
+        if g in guessed:
+            for j, word in enumerate(g):
+                g[j] = colour(word, i+1)
+    
     words = [word for group in groups for word in group]
     random.shuffle(words)
 
     table = PrettyTable()
     table.header = False
     table.padding_width = 5
+
     for i in range(4):
-        table.add_row([words[i], words[i+4], words[i+8], words[i+12]], divider=True)
+        row = []
+        for j in range(len(groups)):
+            word_index = i + 4 * j
+            row.append(words[word_index])
+        table.add_row(row, divider=True)
 
     return table
         
 
 
 def respond(groups):
+    """Prompt user to guess the common connection between words in each group"""
 
     groups = [sorted(group) for group in groups]
 
     correct = 0
     incorrect = 0
+    guessed = []
 
     while correct < 4:
         print(f"Group {correct+1}:")
@@ -107,16 +99,23 @@ def respond(groups):
         for j in range(4):
             response = input()
             common.append(response)
+
         if sorted(common) in groups:
             correct += 1
-            print("\nCorrect!\n")
+            print("\n" + colour("Correct!", "g") + "\n")
+            guessed.append(sorted(common))
+            print(generate_table(groups, guessed=guessed))
+            print("")
         else:
             incorrect += 1
-            print("\nIncorrect. Try again.\n")
+            print("\n" + colour("Incorrect. ", "r") + f"You have {4-incorrect} incorrect guesses remaining\n")
+            print(generate_table(groups))
+            print("")
+
         if incorrect == 4:
             print("You have made 4 incorrect guesses. The correct answers were:\n")
-            for group in groups:
-                print(group + "\n")
+            print(generate_table(groups, guessed=groups))
+            print("")
             break
 
         if correct == 4:
@@ -130,6 +129,7 @@ def respond(groups):
 
     
 def play():
+    """Play the Connections Game"""
 
     print("\nWelcome to an NLP-based Connections Game!\n")
     print("The goals is to make 4 groups of 4 words each, where each group has a common connection\n")
